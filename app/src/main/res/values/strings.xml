@@ -1,0 +1,10 @@
+<resources>
+  <string name="app_name">Movies</string>
+  <string name="MOVIES">Movies</string>
+  <string name="POPULAR">Popular</string>
+  <string name="NOW_PLAYING">Now Playing</string>
+  <string name="ERROR_LOADING_MOVIES">Error loading movies!</string>
+  <string name="TOP_RATED">Top Rated</string>
+  <string name="UPCOMING">Upcoming</string>
+  <string name="menu_filter">Filter Movies</string>
+</resources>
