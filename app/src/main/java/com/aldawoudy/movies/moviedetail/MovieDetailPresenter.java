@@ -17,7 +17,7 @@ public class MovieDetailPresenter implements MovieDetailContract.Presenter {
   private final MoviesRepository mMoviesRepository;
   private final MovieDetailContract.View mMovieView;
   private final BaseSchedulerProvider mSchedulerProvider;
-  private final CompositeSubscription mSubscriptions;
+  private Subscription mSubscription;
   private final Integer mMovieId;
 
   public MovieDetailPresenter(@NonNull Integer movieId,
@@ -28,7 +28,6 @@ public class MovieDetailPresenter implements MovieDetailContract.Presenter {
     mMoviesRepository = moviesRepository;
     mMovieView = movieView;
     mSchedulerProvider = schedulerProvider;
-    mSubscriptions = new CompositeSubscription();
     mMovieView.setPresenter(this);
   }
 
@@ -39,9 +38,8 @@ public class MovieDetailPresenter implements MovieDetailContract.Presenter {
       return;
     }
     mMovieView.setLoadingIndicator(true);
-    mSubscriptions.clear();
 
-    Subscription subscription = mMoviesRepository.getMovie(mMovieId)
+    mSubscription = mMoviesRepository.getMovie(mMovieId)
         .subscribeOn(mSchedulerProvider.computation())
         .observeOn(mSchedulerProvider.ui())
         .subscribe(new Observer<Movie>() {
@@ -61,7 +59,6 @@ public class MovieDetailPresenter implements MovieDetailContract.Presenter {
           }
         });
 
-    mSubscriptions.add(subscription);
   }
 
   @Override
@@ -71,6 +68,8 @@ public class MovieDetailPresenter implements MovieDetailContract.Presenter {
 
   @Override
   public void unsubscribe() {
-    mSubscriptions.unsubscribe();
+    if (mSubscription != null) {
+      mSubscription.unsubscribe();
+    }
   }
 }

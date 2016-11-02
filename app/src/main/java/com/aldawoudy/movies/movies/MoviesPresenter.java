@@ -4,14 +4,11 @@ import android.support.annotation.NonNull;
 import com.aldawoudy.movies.data.Movie;
 import com.aldawoudy.movies.data.source.MoviesRepository;
 import com.aldawoudy.movies.utils.schedulers.BaseSchedulerProvider;
-import java.io.Serializable;
 import java.util.List;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
-import rx.subscriptions.CompositeSubscription;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Created by Ismail on 10/27/16.
@@ -19,8 +16,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class MoviesPresenter implements MoviesContract.Presenter {
 
-  @NonNull
-  private CompositeSubscription mSubscriptions;
+
+  private Subscription mSubscription;
 
   @NonNull
   private final MoviesRepository mMoviesRepository;
@@ -40,14 +37,12 @@ public class MoviesPresenter implements MoviesContract.Presenter {
     mMoviesRepository = moviesRepository;
     mMoviesView = moviesView;
     mSchedulerProvider = schedulerProvider;
-    mSubscriptions = new CompositeSubscription();
     mMoviesView.setPresenter(this);
   }
 
   @Override
   public void loadMovies(Integer page) {
     mMoviesView.setLoadingIndicator(true);
-    mSubscriptions.clear();
     Observable<List<Movie>> observable;
     switch (mCurrentFiltering) {
       case UPCOMING:
@@ -63,7 +58,7 @@ public class MoviesPresenter implements MoviesContract.Presenter {
         observable = mMoviesRepository.getPopularMovies(page);
         break;
     }
-    Subscription subscription = observable
+    mSubscription = observable
         .subscribeOn(mSchedulerProvider.computation())
         .observeOn(mSchedulerProvider.ui())
         .subscribe(new Observer<List<Movie>>() {
@@ -83,8 +78,6 @@ public class MoviesPresenter implements MoviesContract.Presenter {
             mMoviesView.showMovies(movies, page);
           }
         });
-
-    mSubscriptions.add(subscription);
   }
 
   @Override
@@ -106,7 +99,9 @@ public class MoviesPresenter implements MoviesContract.Presenter {
 
   @Override
   public void unsubscribe() {
-    mSubscriptions.unsubscribe();
+    if (mSubscription != null) {
+      mSubscription.unsubscribe();
+    }
   }
 
   public void setFiltering(MoviesFilterType currentFiltering) {
